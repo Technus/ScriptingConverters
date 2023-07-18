@@ -7,9 +7,9 @@ using Microsoft.CodeAnalysis.Scripting.Hosting;
 
 namespace ScriptingConverters
 {
-  public abstract class BaseScripting
+  public static class ScriptUtilities
   {
-    protected static ScriptOptions options = ScriptOptions.Default
+    public static ScriptOptions Options { get; set; } = ScriptOptions.Default
       .AddReferences("System.Linq")
       .AddReferences("System.Linq.Expressions")
       .AddReferences("System.Collections.Generic")
@@ -46,9 +46,9 @@ namespace ScriptingConverters
       .AddReferences("System.Numerics")
       .AddImports("System.Numerics.Complex");
 
-    protected static InteractiveAssemblyLoader assemblyLoader = new InteractiveAssemblyLoader();
+    public static InteractiveAssemblyLoader AssemblyLoader { get; set; } = new InteractiveAssemblyLoader();
 
-    private static readonly IList<(string from, string to)> replaces = new List<(string from, string to)>
+    private static readonly IList<(string from, string to)> _replaces = new List<(string from, string to)>
     {
       ( @"`_"   ," "  ),
       ( @"`\]"   ,"}" ),
@@ -62,8 +62,7 @@ namespace ScriptingConverters
       ( @"`[`\^]"  ,"\"" ),
       ( @"`\.?"   ,"," ),
     };
-    private static readonly Regex regEx = new Regex("(" + string.Join(")|(", Enumerate<string>(replaces.Select(x => x.from))) + ")");
-
+    private static readonly Regex _regEx = new Regex("(" + string.Join(")|(", Enumerate<string>(_replaces.Select(x => x.from))) + ")");
     private static IEnumerable<T> Enumerate<T>(IEnumerable collection)
     {
       foreach (var item in collection)
@@ -72,7 +71,7 @@ namespace ScriptingConverters
       }
     }
 
-    protected static string Sanitize(string script) => regEx.Replace(script, match =>
+    public static string ReplaceXmlEscapes(string script) => _regEx.Replace(script, match =>
     {
       var enumerator = Enumerate<Group>(match.Groups).GetEnumerator();
       if (!enumerator.MoveNext() || !enumerator.Current.Success)
@@ -84,17 +83,12 @@ namespace ScriptingConverters
       {
         if (enumerator.Current.Success)
         {
-          return replaces[id].to;
+          return _replaces[id].to;
         }
 
         id++;
       }
       return match.Value;
     });
-  }
-
-  public abstract class BaseScripting<T> : BaseScripting
-  {
-    protected static readonly IDictionary<string, T> scripts = new Dictionary<string, T>();
   }
 }

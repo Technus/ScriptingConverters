@@ -7,6 +7,7 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:ScriptingTestApp"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:script="clr-namespace:ScriptingConverters;assembly=ScriptingConverters"
   Width="800"
   Height="450"
   mc:Ignorable="d">
@@ -15,6 +16,6 @@
       HorizontalAlignment="Center"
       VerticalAlignment="Center"
       Foreground="Black"
-      Text="{Binding Height, ElementName=windo, Converter={StaticResource script}, ConverterParameter=Max(3`5)+``Kek``}" />
+      Text="{Binding Height, ElementName=windo, Converter={script:Scripting Max((double)value`.5)+``Kek``}}" />
   </Grid>
 </Window>

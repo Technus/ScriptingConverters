@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CodeAnalysisApp1\ScriptingConverters.csproj" />
+    <ProjectReference Include="..\ScriptingConverters\ScriptingConverters.csproj" />
   </ItemGroup>
 
 </Project>
