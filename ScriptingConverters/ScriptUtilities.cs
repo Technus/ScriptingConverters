@@ -1,14 +1,22 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
 
 namespace ScriptingConverters
 {
+  /// <summary>
+  /// Helpers for script building
+  /// </summary>
   public static class ScriptUtilities
   {
+    /// <summary>
+    /// Globally used <see cref="ScriptOptions"/> in <see cref="CSharpScript.Create{T}(string, ScriptOptions, System.Type, InteractiveAssemblyLoader)"/>
+    /// </summary>
     public static ScriptOptions Options { get; set; } = ScriptOptions.Default
       .AddReferences("System.Linq")
       .AddReferences("System.Linq.Expressions")
@@ -46,9 +54,15 @@ namespace ScriptingConverters
       .AddReferences("System.Numerics")
       .AddImports("System.Numerics.Complex");
 
+    /// <summary>
+    /// Globally used <see cref="InteractiveAssemblyLoader"/> in <see cref="CSharpScript.Create{T}(string, ScriptOptions, System.Type, InteractiveAssemblyLoader)"/>
+    /// </summary>
     public static InteractiveAssemblyLoader AssemblyLoader { get; set; } = new InteractiveAssemblyLoader();
 
-    private static readonly IList<(string from, string to)> _replaces = new List<(string from, string to)>
+    /// <summary>
+    /// Replacements used in <see cref="ReplaceXmlEscapes"/>
+    /// </summary>
+    public static IList<(string from, string to)> Replacements { get; } = new List<(string from, string to)>
     {
       ( @"`_"   ," "  ),
       ( @"`\]"   ,"}" ),
@@ -62,8 +76,16 @@ namespace ScriptingConverters
       ( @"`[`\^]"  ,"\"" ),
       ( @"`\.?"   ,"," ),
     };
-    private static readonly Regex _regEx = new Regex("(" + string.Join(")|(", Enumerate<string>(_replaces.Select(x => x.from))) + ")");
-    private static IEnumerable<T> Enumerate<T>(IEnumerable collection)
+
+    private static readonly Regex _regEx = new Regex("(" + string.Join(")|(", Enumerate<string>(Replacements.Select(x => x.from))) + ")");
+
+    /// <summary>
+    /// Helper for enumeration of non generic items
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="collection"></param>
+    /// <returns></returns>
+    public static IEnumerable<T> Enumerate<T>(IEnumerable collection)
     {
       foreach (var item in collection)
       {
@@ -71,7 +93,11 @@ namespace ScriptingConverters
       }
     }
 
-    public static string ReplaceXmlEscapes(string script) => _regEx.Replace(script, match =>
+    /// <summary>
+    /// Globally used XML text escape for C# scripts
+    /// </summary>
+    /// <returns></returns>
+    public static Func<string, string> ReplaceXmlEscapes { get; set; } = script => _regEx.Replace(script, match =>
     {
       var enumerator = Enumerate<Group>(match.Groups).GetEnumerator();
       if (!enumerator.MoveNext() || !enumerator.Current.Success)
@@ -83,7 +109,7 @@ namespace ScriptingConverters
       {
         if (enumerator.Current.Success)
         {
-          return _replaces[id].to;
+          return Replacements[id].to;
         }
 
         id++;
