@@ -99,22 +99,24 @@ namespace ScriptingConverters
     /// <returns></returns>
     public static Func<string, string> ReplaceXmlEscapes { get; set; } = script => _regEx.Replace(script, match =>
     {
-      var enumerator = Enumerate<Group>(match.Groups).GetEnumerator();
-      if (!enumerator.MoveNext() || !enumerator.Current.Success)
+      using (var enumerator = Enumerate<Group>(match.Groups).GetEnumerator())
       {
+        if (!enumerator.MoveNext() || !enumerator.Current.Success)
+        {
+          return match.Value;
+        }
+        int id = 0;
+        while (enumerator.MoveNext())
+        {
+          if (enumerator.Current.Success)
+          {
+            return Replacements[id].to;
+          }
+
+          id++;
+        }
         return match.Value;
       }
-      int id = 0;
-      while (enumerator.MoveNext())
-      {
-        if (enumerator.Current.Success)
-        {
-          return Replacements[id].to;
-        }
-
-        id++;
-      }
-      return match.Value;
     });
   }
 }
